@@ -1,19 +1,19 @@
 version: "3"
 services:
-  db:
+  todo-api-db:
     image: postgres:13.3
     environment:
       POSTGRES_HOST_AUTH_METHOD: trust
     volumes:
-      - postgres-data:/var/lib/postgresql/data
-  api:
+      - todo-api-db-data:/var/lib/postgresql/data
+  todo-api:
     build: .
-    command: go main.go
+    command: go run main.go
     volumes:
-      - .:/app
+      - ./todo-api:/app
     ports:
       - "3000:3000"
     depends_on:
-      - db
+      - todo-api-db
 volumes:
-  postgres-data:
+  todo-api-db-data:
