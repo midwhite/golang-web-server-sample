@@ -1,6 +1,7 @@
 package router
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -8,7 +9,12 @@ import (
 )
 
 func StartServer() {
-	http.HandleFunc("/todos", controllers.GetTodos)
+	http.HandleFunc("/todos/", controllers.GetTodos)
+	http.HandleFunc("/users/1", controllers.GetUserDetail)
 
-	log.Fatal(http.ListenAndServe(":3000", nil))
+	fmt.Println("router is set up.")
+
+	log.Fatal(
+		http.ListenAndServe(":3000", nil),
+	)
 }
