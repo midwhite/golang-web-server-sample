@@ -7,8 +7,7 @@ services:
     volumes:
       - todo-api-db-data:/var/lib/postgresql/data
   todo-api:
-    build: .
-    command: go run main.go
+    build: ./todo-api
     volumes:
       - ./todo-api:/app
     ports:
