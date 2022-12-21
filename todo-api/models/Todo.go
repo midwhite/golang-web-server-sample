@@ -1,6 +1,6 @@
 package models
 
 type Todo struct {
-	Id    string
-	Title string
+	Id    string `json:"id"`
+	Title string `json:"title"`
 }
