@@ -10,6 +10,7 @@ import (
 
 func StartServer() {
 	http.HandleFunc("/todos", controllers.HandleTodos)
+	http.HandleFunc("/todos/", controllers.HandleTodoDetail)
 	http.HandleFunc("/users/1", controllers.GetUserDetail)
 
 	fmt.Println("router is set up.")
