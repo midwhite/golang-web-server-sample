@@ -6,8 +6,6 @@ import (
 	"os"
 
 	"github.com/jackc/pgx/v5"
-
-	"github.com/midwhite/golang-web-server-sample/todo-api/db/migrations"
 )
 
 var Conn *pgx.Conn
@@ -20,8 +18,6 @@ func Setup() {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
 		os.Exit(1)
 	}
-
-	migrations.Migrate(conn)
 
 	Conn = conn
 }
