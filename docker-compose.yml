@@ -12,6 +12,8 @@ services:
       - ./todo-api:/app
     ports:
       - "3000:3000"
+    environment:
+      DATABASE_URL: postgres://postgres@todo-api-db:5432/todo_api_development?sslmode=disable
     depends_on:
       - todo-api-db
 volumes:

@@ -11,8 +11,7 @@ import (
 var Conn *pgx.Conn
 
 func Setup() {
-	databaseURL := "postgres://postgres@todo-api-db:5432/todo_api_development"
-	conn, err := pgx.Connect(context.Background(), databaseURL)
+	conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
 
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
