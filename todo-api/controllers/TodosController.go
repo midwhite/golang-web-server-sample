@@ -47,6 +47,8 @@ func HandleTodoDetail(w http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case "GET", "":
 		getTodoDetail(w, req, todoId)
+	case "PUT":
+		updateTodo(w, req, todoId)
 	case "DELETE":
 		deleteTodo(w, req, todoId)
 	default:
@@ -109,8 +111,35 @@ func getTodoDetail(w http.ResponseWriter, _ *http.Request, todoId string) {
 	}
 }
 
+type UpdateTodoParams struct {
+	Title string `json:"title"`
+}
+
+func updateTodo(w http.ResponseWriter, req *http.Request, todoId string) {
+	todo, err := models.FindTodo(context.Background(), db.Conn, todoId, "id", "title", "created_at")
+
+	if err != nil {
+		data := serializers.ErrorResponse{Message: err.Error()}
+		body, _ := json.Marshal(data)
+
+		w.WriteHeader(http.StatusNotFound)
+		w.Write(body)
+	} else {
+		reqBody, _ := utils.ReadRequestBody(req)
+
+		params := new(UpdateTodoParams)
+		json.Unmarshal(reqBody, params)
+
+		todo.Title = params.Title
+		todo.Update(context.Background(), db.Conn, boil.Infer())
+
+		body, _ := json.Marshal(todo)
+		w.Write(body)
+	}
+}
+
 func deleteTodo(w http.ResponseWriter, _ *http.Request, todoId string) {
-	todo, err := models.FindTodo(context.Background(), db.Conn, todoId, "id", "title")
+	todo, err := models.FindTodo(context.Background(), db.Conn, todoId, "id")
 
 	if err != nil {
 		data := serializers.ErrorResponse{Message: err.Error()}
