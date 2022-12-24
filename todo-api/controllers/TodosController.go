@@ -47,6 +47,8 @@ func HandleTodoDetail(w http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case "GET", "":
 		getTodoDetail(w, req, todoId)
+	case "DELETE":
+		deleteTodo(w, req, todoId)
 	default:
 		data := serializers.ErrorResponse{Message: "No route matches."}
 		body, _ := json.Marshal(data)
@@ -103,6 +105,27 @@ func getTodoDetail(w http.ResponseWriter, _ *http.Request, todoId string) {
 		body, _ := json.Marshal(todo)
 
 		w.Header().Set("Content-Type", "application/json")
+		w.Write(body)
+	}
+}
+
+func deleteTodo(w http.ResponseWriter, _ *http.Request, todoId string) {
+	todo, err := models.FindTodo(context.Background(), db.Conn, todoId, "id", "title")
+
+	if err != nil {
+		data := serializers.ErrorResponse{Message: err.Error()}
+		body, _ := json.Marshal(data)
+
+		w.WriteHeader(http.StatusNotFound)
+		w.Write(body)
+	} else {
+		todo.Delete(context.Background(), db.Conn)
+
+		data := map[string]bool{
+			"success": true,
+		}
+		body, _ := json.Marshal(data)
+
 		w.Write(body)
 	}
 }
