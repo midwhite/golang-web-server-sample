@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/midwhite/golang-web-server-sample/todo-api/models"
+	"github.com/midwhite/golang-web-server-sample/todo-api/serializers"
 	"github.com/midwhite/golang-web-server-sample/todo-api/utils"
 )
 
@@ -19,7 +20,7 @@ func HandleTodos(w http.ResponseWriter, req *http.Request) {
 	case "GET", "":
 		getTodoList(w, req)
 	default:
-		data := models.ErrorResponse{Message: "Not Found"}
+		data := serializers.ErrorResponse{Message: "Not Found"}
 		body, _ := json.Marshal(data)
 
 		w.WriteHeader(http.StatusNotFound)
@@ -33,7 +34,7 @@ func HandleTodoDetail(w http.ResponseWriter, req *http.Request) {
 	todoId := paths[0]
 
 	if todoId == "" {
-		data := models.ErrorResponse{Message: "ID is not set."}
+		data := serializers.ErrorResponse{Message: "ID is not set."}
 		body, _ := json.Marshal(data)
 
 		w.WriteHeader(http.StatusNotFound)
@@ -45,7 +46,7 @@ func HandleTodoDetail(w http.ResponseWriter, req *http.Request) {
 	case "GET", "":
 		getTodoDetail(w, req, todoId)
 	default:
-		data := models.ErrorResponse{Message: "No route matches."}
+		data := serializers.ErrorResponse{Message: "No route matches."}
 		body, _ := json.Marshal(data)
 
 		w.WriteHeader(http.StatusNotFound)
