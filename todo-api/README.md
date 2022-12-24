@@ -18,3 +18,10 @@ $ make start
 ```sh
 $ make build
 ```
+
+### test
+
+```sh
+$ make test # run all the tests
+$ go test -v ./xxx # run tests under the specified directory
+```

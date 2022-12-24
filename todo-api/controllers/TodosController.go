@@ -13,6 +13,7 @@ import (
 	"github.com/midwhite/golang-web-server-sample/todo-api/serializers"
 	"github.com/midwhite/golang-web-server-sample/todo-api/utils"
 	"github.com/volatiletech/sqlboiler/v4/boil"
+	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
 
 func HandleTodos(w http.ResponseWriter, req *http.Request) {
@@ -83,7 +84,7 @@ type GetTodoListResponse struct {
 }
 
 func getTodoList(w http.ResponseWriter, _ *http.Request) {
-	todos, _ := models.Todos().All(context.Background(), db.Conn)
+	todos, _ := models.Todos(qm.OrderBy("created_at")).All(context.Background(), db.Conn)
 	if todos == nil {
 		todos = make([]*models.Todo, 0)
 	}
