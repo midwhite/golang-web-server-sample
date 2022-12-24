@@ -8,5 +8,7 @@ init-db:
 	psql -U postgres -h todo-api-db -c "CREATE DATABASE todo_api_development;"
 migrate:
 	migrate -source file://migration -database ${DATABASE_URL} up
+rollback:
+	migrate -source file://migration -database ${DATABASE_URL} down
 psql:
 	psql -U postgres -h todo-api-db todo_api_development

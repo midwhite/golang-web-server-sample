@@ -1,16 +1,18 @@
 package controllers
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
+	"github.com/midwhite/golang-web-server-sample/todo-api/db"
 	"github.com/midwhite/golang-web-server-sample/todo-api/models"
 	"github.com/midwhite/golang-web-server-sample/todo-api/serializers"
 	"github.com/midwhite/golang-web-server-sample/todo-api/utils"
+	"github.com/volatiletech/sqlboiler/v4/boil"
 )
 
 func HandleTodos(w http.ResponseWriter, req *http.Request) {
@@ -55,7 +57,6 @@ func HandleTodoDetail(w http.ResponseWriter, req *http.Request) {
 }
 
 type CreateTodoParams struct {
-	Id    int    `json:"id"`
 	Title string `json:"title"`
 }
 
@@ -64,7 +65,8 @@ func createTodo(w http.ResponseWriter, req *http.Request) {
 	params := new(CreateTodoParams)
 	json.Unmarshal(reqBody, params)
 
-	todo := models.Todo{ID: strconv.Itoa(params.Id), Title: params.Title}
+	todo := models.Todo{Title: params.Title, CreatedAt: time.Now()}
+	todo.Insert(context.Background(), db.Conn, boil.Infer())
 	body, _ := json.Marshal(todo)
 
 	w.Header().Set("Content-Type", "application/json")
@@ -73,14 +75,15 @@ func createTodo(w http.ResponseWriter, req *http.Request) {
 }
 
 type GetTodoListResponse struct {
-	Todos []models.Todo `json:"todos"`
+	Todos []*models.Todo `json:"todos"`
 }
 
 func getTodoList(w http.ResponseWriter, _ *http.Request) {
-	todo := models.Todo{ID: "1", Title: "Todo Sample 1", CreatedAt: time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC)}
-	todos := []models.Todo{todo}
+	todos, _ := models.Todos().All(context.Background(), db.Conn)
+	if todos == nil {
+		todos = make([]*models.Todo, 0)
+	}
 	response := GetTodoListResponse{Todos: todos}
-
 	body, _ := json.Marshal(response)
 
 	w.Header().Set("Content-Type", "application/json")
@@ -88,9 +91,18 @@ func getTodoList(w http.ResponseWriter, _ *http.Request) {
 }
 
 func getTodoDetail(w http.ResponseWriter, _ *http.Request, todoId string) {
-	todo := models.Todo{ID: todoId, Title: "Sample Todo", CreatedAt: time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC)}
-	body, _ := json.Marshal(todo)
+	todo, err := models.FindTodo(context.Background(), db.Conn, todoId, "id", "title")
 
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(body)
+	if err != nil {
+		data := serializers.ErrorResponse{Message: err.Error()}
+		body, _ := json.Marshal(data)
+
+		w.WriteHeader(http.StatusNotFound)
+		w.Write(body)
+	} else {
+		body, _ := json.Marshal(todo)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(body)
+	}
 }

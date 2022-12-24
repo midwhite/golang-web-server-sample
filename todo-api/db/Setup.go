@@ -1,17 +1,17 @@
 package db
 
 import (
-	"context"
+	"database/sql"
 	"fmt"
 	"os"
 
-	"github.com/jackc/pgx/v5"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-var Conn *pgx.Conn
+var Conn *sql.DB
 
 func Setup() {
-	conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
+	conn, err := sql.Open("pgx", os.Getenv("DATABASE_URL"))
 
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
@@ -22,6 +22,6 @@ func Setup() {
 }
 
 func Close() {
-	Conn.Close(context.Background())
+	Conn.Close()
 	fmt.Println("database connection is closed.")
 }
