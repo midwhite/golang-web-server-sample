@@ -2,6 +2,8 @@ start:
 	air -c .air.toml
 build:
 	go build -o cmd/api/run cmd/api/main.go
+generate-models:
+	sqlboiler psql
 init-db:
 	psql -U postgres -h todo-api-db -c "CREATE DATABASE todo_api_development;"
 migrate:

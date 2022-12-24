@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/midwhite/golang-web-server-sample/todo-api/models"
 	"github.com/midwhite/golang-web-server-sample/todo-api/utils"
@@ -62,7 +63,7 @@ func createTodo(w http.ResponseWriter, req *http.Request) {
 	params := new(CreateTodoParams)
 	json.Unmarshal(reqBody, params)
 
-	todo := models.Todo{Id: strconv.Itoa(params.Id), Title: params.Title}
+	todo := models.Todo{ID: strconv.Itoa(params.Id), Title: params.Title}
 	body, _ := json.Marshal(todo)
 
 	w.Header().Set("Content-Type", "application/json")
@@ -75,7 +76,7 @@ type GetTodoListResponse struct {
 }
 
 func getTodoList(w http.ResponseWriter, _ *http.Request) {
-	todo := models.Todo{Id: "1", Title: "Todo Sample 1"}
+	todo := models.Todo{ID: "1", Title: "Todo Sample 1", CreatedAt: time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC)}
 	todos := []models.Todo{todo}
 	response := GetTodoListResponse{Todos: todos}
 
@@ -86,7 +87,7 @@ func getTodoList(w http.ResponseWriter, _ *http.Request) {
 }
 
 func getTodoDetail(w http.ResponseWriter, _ *http.Request, todoId string) {
-	todo := models.Todo{Id: todoId, Title: "Sample Todo"}
+	todo := models.Todo{ID: todoId, Title: "Sample Todo", CreatedAt: time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC)}
 	body, _ := json.Marshal(todo)
 
 	w.Header().Set("Content-Type", "application/json")

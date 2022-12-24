@@ -1,0 +1,5 @@
+[psql]
+host = "todo-api-db"
+user = "postgres"
+dbname = "todo_api_development"
+sslmode = "disable"
