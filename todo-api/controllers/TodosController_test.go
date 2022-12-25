@@ -27,7 +27,7 @@ func TestMain(m *testing.M) {
 	os.Exit(status)
 }
 
-func TestTodoControllerCreate(t *testing.T) {
+func TestTodosControllerCreate(t *testing.T) {
 	t.Run("when title is blank", func(t *testing.T) {
 		t.Cleanup(func() {
 			db.Reset()
@@ -81,7 +81,7 @@ func TestTodoControllerCreate(t *testing.T) {
 	})
 }
 
-func TestTodoControllerIndex(t *testing.T) {
+func TestTodosControllerIndex(t *testing.T) {
 	t.Run("when todo does not exist", func(t *testing.T) {
 		t.Run("responds empty array", func(t *testing.T) {
 			t.Cleanup(func() {
