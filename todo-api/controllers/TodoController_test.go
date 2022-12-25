@@ -7,12 +7,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"strconv"
 	"testing"
 	"time"
 
 	"github.com/midwhite/golang-web-server-sample/todo-api/db"
 	"github.com/midwhite/golang-web-server-sample/todo-api/models"
+	"github.com/midwhite/golang-web-server-sample/todo-api/serializers"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 )
 
@@ -89,32 +89,55 @@ func TestTodoControllerIndex(t *testing.T) {
 }
 
 func TestTodoControllerCreate(t *testing.T) {
-	t.Cleanup(func() {
-		db.Reset()
+	t.Run("when title is blank", func(t *testing.T) {
+		t.Cleanup(func() {
+			db.Reset()
+		})
+
+		t.Run("responds correct error message", func(t *testing.T) {
+			reqBody := CreateTodoParams{Title: ""}
+			encodedReqBody, _ := json.Marshal(reqBody)
+			req := httptest.NewRequest(http.MethodPost, "http://localhost:3000/todos", bytes.NewBuffer(encodedReqBody))
+			got := httptest.NewRecorder()
+
+			HandleTodos(got, req)
+
+			data := new(serializers.ErrorResponse)
+			json.Unmarshal(got.Body.Bytes(), data)
+
+			if data.Message != "件名は必須です。" {
+				t.Errorf("expected %+v, but got %+v", "件名は必須です。", data.Message)
+			}
+		})
 	})
 
-	t.Run("creates new todo", func(t *testing.T) {
-		prevCount, _ := models.Todos().Count(context.Background(), db.Conn)
+	t.Run("when parameters are valid", func(t *testing.T) {
+		t.Cleanup(func() {
+			db.Reset()
+		})
 
-		reqBody := CreateTodoParams{Title: "New Todo Title"}
-		encodedReqBody, _ := json.Marshal(reqBody)
-		req := httptest.NewRequest(http.MethodPost, "http://localhost:3000/todos", bytes.NewBuffer(encodedReqBody))
-		req.Header.Set("Content-Length", strconv.Itoa(len(encodedReqBody)))
-		got := httptest.NewRecorder()
+		t.Run("creates new todo", func(t *testing.T) {
+			prevCount, _ := models.Todos().Count(context.Background(), db.Conn)
 
-		HandleTodos(got, req)
+			reqBody := CreateTodoParams{Title: "New Todo Title"}
+			encodedReqBody, _ := json.Marshal(reqBody)
+			req := httptest.NewRequest(http.MethodPost, "http://localhost:3000/todos", bytes.NewBuffer(encodedReqBody))
+			got := httptest.NewRecorder()
 
-		currentCount, _ := models.Todos().Count(context.Background(), db.Conn)
+			HandleTodos(got, req)
 
-		if prevCount+1 != currentCount {
-			t.Errorf("expected %+v, but got %+v", prevCount+1, currentCount)
-		}
+			currentCount, _ := models.Todos().Count(context.Background(), db.Conn)
 
-		data := new(models.Todo)
-		json.Unmarshal(got.Body.Bytes(), data)
+			if prevCount+1 != currentCount {
+				t.Errorf("expected %+v, but got %+v", prevCount+1, currentCount)
+			}
 
-		if data.Title != reqBody.Title {
-			t.Errorf("expected %+v, but got %+v", reqBody.Title, data.Title)
-		}
+			data := new(models.Todo)
+			json.Unmarshal(got.Body.Bytes(), data)
+
+			if data.Title != reqBody.Title {
+				t.Errorf("expected %+v, but got %+v", reqBody.Title, data.Title)
+			}
+		})
 	})
 }

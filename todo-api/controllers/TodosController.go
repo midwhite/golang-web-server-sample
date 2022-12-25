@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/midwhite/golang-web-server-sample/todo-api/db"
 	"github.com/midwhite/golang-web-server-sample/todo-api/models"
 	"github.com/midwhite/golang-web-server-sample/todo-api/serializers"
@@ -62,7 +63,7 @@ func HandleTodoDetail(w http.ResponseWriter, req *http.Request) {
 }
 
 type CreateTodoParams struct {
-	Title string `json:"title"`
+	Title string `json:"title" validate:"required"`
 }
 
 func createTodo(w http.ResponseWriter, req *http.Request) {
@@ -70,13 +71,30 @@ func createTodo(w http.ResponseWriter, req *http.Request) {
 	params := new(CreateTodoParams)
 	json.Unmarshal(reqBody, params)
 
-	todo := models.Todo{Title: params.Title, CreatedAt: time.Now()}
-	todo.Insert(context.Background(), db.Conn, boil.Infer())
-	body, _ := json.Marshal(todo)
+	validation := validator.New()
+	err := validation.Struct(params)
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	w.Write(body)
+	if err != nil {
+		result := make([]string, 0)
+		for _, validationError := range err.(validator.ValidationErrors) {
+			result = append(result, serializers.TranslateErrorMessage(validationError, "Todo"))
+		}
+		message := strings.Join(result, "\n")
+
+		data := serializers.ErrorResponse{Message: message}
+		body, _ := json.Marshal(data)
+
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(body)
+	} else {
+		todo := models.Todo{Title: params.Title, CreatedAt: time.Now()}
+		todo.Insert(context.Background(), db.Conn, boil.Infer())
+		body, _ := json.Marshal(todo)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+		w.Write(body)
+	}
 }
 
 type GetTodoListResponse struct {
