@@ -1,11 +1,13 @@
 package controllers
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strconv"
 	"testing"
 	"time"
 
@@ -17,7 +19,7 @@ import (
 func TestMain(m *testing.M) {
 	os.Setenv("DATABASE_URL", "postgres://postgres@todo-api-db:5432/todo_api_test?sslmode=disable")
 	db.Setup()
-	db.Migrate()
+	db.Reset()
 
 	status := m.Run()
 
@@ -28,6 +30,10 @@ func TestMain(m *testing.M) {
 func TestTodoControllerIndex(t *testing.T) {
 	t.Run("when todo does not exist", func(t *testing.T) {
 		t.Run("responds empty array", func(t *testing.T) {
+			t.Cleanup(func() {
+				db.Reset()
+			})
+
 			req := httptest.NewRequest(http.MethodGet, "http://localhost:3000/todos", nil)
 			got := httptest.NewRecorder()
 
@@ -47,6 +53,10 @@ func TestTodoControllerIndex(t *testing.T) {
 	})
 
 	t.Run("when some todos exist", func(t *testing.T) {
+		t.Cleanup(func() {
+			db.Reset()
+		})
+
 		todo1 := models.Todo{Title: "Todo 1", CreatedAt: time.Now()}
 		todo1.Insert(context.Background(), db.Conn, boil.Infer())
 		todo2 := models.Todo{Title: "Todo 2", CreatedAt: time.Now()}
@@ -75,5 +85,36 @@ func TestTodoControllerIndex(t *testing.T) {
 				t.Errorf("expected todo has correct title, but got %+v, %+v", data1, data2)
 			}
 		})
+	})
+}
+
+func TestTodoControllerCreate(t *testing.T) {
+	t.Cleanup(func() {
+		db.Reset()
+	})
+
+	t.Run("creates new todo", func(t *testing.T) {
+		prevCount, _ := models.Todos().Count(context.Background(), db.Conn)
+
+		reqBody := CreateTodoParams{Title: "New Todo Title"}
+		encodedReqBody, _ := json.Marshal(reqBody)
+		req := httptest.NewRequest(http.MethodPost, "http://localhost:3000/todos", bytes.NewBuffer(encodedReqBody))
+		req.Header.Set("Content-Length", strconv.Itoa(len(encodedReqBody)))
+		got := httptest.NewRecorder()
+
+		HandleTodos(got, req)
+
+		currentCount, _ := models.Todos().Count(context.Background(), db.Conn)
+
+		if prevCount+1 != currentCount {
+			t.Errorf("expected %+v, but got %+v", prevCount+1, currentCount)
+		}
+
+		data := new(models.Todo)
+		json.Unmarshal(got.Body.Bytes(), data)
+
+		if data.Title != reqBody.Title {
+			t.Errorf("expected %+v, but got %+v", reqBody.Title, data.Title)
+		}
 	})
 }

@@ -61,7 +61,11 @@ func Rollback() {
 			os.Exit(1)
 		}
 	}
+}
 
+func Reset() {
+	Rollback()
+	Migrate()
 }
 
 func Close() {
