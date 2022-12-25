@@ -117,7 +117,7 @@ func getTodoDetail(w http.ResponseWriter, _ *http.Request, todoId string) {
 	todo, err := models.FindTodo(context.Background(), db.Conn, todoId, "id", "title")
 
 	if err != nil {
-		data := serializers.ErrorResponse{Message: err.Error()}
+		data := serializers.ErrorResponse{Message: "todo is not found."}
 		body, _ := json.Marshal(data)
 
 		w.WriteHeader(http.StatusNotFound)
@@ -131,14 +131,14 @@ func getTodoDetail(w http.ResponseWriter, _ *http.Request, todoId string) {
 }
 
 type UpdateTodoParams struct {
-	Title string `json:"title"`
+	Title string `json:"title" validate:"required"`
 }
 
 func updateTodo(w http.ResponseWriter, req *http.Request, todoId string) {
 	todo, err := models.FindTodo(context.Background(), db.Conn, todoId, "id", "title", "created_at")
 
 	if err != nil {
-		data := serializers.ErrorResponse{Message: err.Error()}
+		data := serializers.ErrorResponse{Message: "todo is not found."}
 		body, _ := json.Marshal(data)
 
 		w.WriteHeader(http.StatusNotFound)
@@ -149,19 +149,40 @@ func updateTodo(w http.ResponseWriter, req *http.Request, todoId string) {
 		params := new(UpdateTodoParams)
 		json.Unmarshal(reqBody, params)
 
-		todo.Title = params.Title
-		todo.Update(context.Background(), db.Conn, boil.Infer())
+		validation := validator.New()
+		err := validation.Struct(params)
 
-		body, _ := json.Marshal(todo)
-		w.Write(body)
+		if err != nil {
+			errorMessages := make([]string, 0)
+			for _, fieldError := range err.(validator.ValidationErrors) {
+				errorMessages = append(errorMessages, serializers.TranslateErrorMessage(fieldError, "Todo"))
+			}
+			message := strings.Join(errorMessages, "\n")
+
+			data := serializers.ErrorResponse{Message: message}
+			body, _ := json.Marshal(data)
+
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write(body)
+		} else {
+			todo.Title = params.Title
+			todo.Update(context.Background(), db.Conn, boil.Infer())
+
+			body, _ := json.Marshal(todo)
+			w.Write(body)
+		}
 	}
+}
+
+type DeleteTodoResponse struct {
+	Success bool `json:"success"`
 }
 
 func deleteTodo(w http.ResponseWriter, _ *http.Request, todoId string) {
 	todo, err := models.FindTodo(context.Background(), db.Conn, todoId, "id")
 
 	if err != nil {
-		data := serializers.ErrorResponse{Message: err.Error()}
+		data := serializers.ErrorResponse{Message: "todo is not found."}
 		body, _ := json.Marshal(data)
 
 		w.WriteHeader(http.StatusNotFound)
@@ -169,9 +190,7 @@ func deleteTodo(w http.ResponseWriter, _ *http.Request, todoId string) {
 	} else {
 		todo.Delete(context.Background(), db.Conn)
 
-		data := map[string]bool{
-			"success": true,
-		}
+		data := DeleteTodoResponse{Success: true}
 		body, _ := json.Marshal(data)
 
 		w.Write(body)
