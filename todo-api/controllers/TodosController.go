@@ -3,6 +3,7 @@ package controllers
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"net/http"
 	"regexp"
 	"strings"
@@ -11,7 +12,6 @@ import (
 	"github.com/midwhite/golang-web-server-sample/todo-api/db"
 	"github.com/midwhite/golang-web-server-sample/todo-api/models"
 	"github.com/midwhite/golang-web-server-sample/todo-api/serializers"
-	"github.com/midwhite/golang-web-server-sample/todo-api/utils"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
@@ -66,7 +66,7 @@ type CreateTodoParams struct {
 }
 
 func createTodo(w http.ResponseWriter, req *http.Request) {
-	reqBody, _ := utils.ReadRequestBody(req)
+	reqBody, _ := io.ReadAll(req.Body)
 	params := new(CreateTodoParams)
 	json.Unmarshal(reqBody, params)
 
@@ -126,7 +126,7 @@ func updateTodo(w http.ResponseWriter, req *http.Request, todoId string) {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write(body)
 	} else {
-		reqBody, _ := utils.ReadRequestBody(req)
+		reqBody, _ := io.ReadAll(req.Body)
 
 		params := new(UpdateTodoParams)
 		json.Unmarshal(reqBody, params)

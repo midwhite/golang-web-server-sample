@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -28,9 +29,7 @@ func readMigrationFiles(pattern string) []string {
 
 	for i, path := range filepaths {
 		file, _ := os.Open(path)
-		stat, _ := file.Stat()
-		sql := make([]byte, stat.Size())
-		file.Read(sql)
+		sql, _ := io.ReadAll(file)
 		result[i] = string(sql)
 	}
 
