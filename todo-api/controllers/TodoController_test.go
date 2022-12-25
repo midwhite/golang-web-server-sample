@@ -27,6 +27,60 @@ func TestMain(m *testing.M) {
 	os.Exit(status)
 }
 
+func TestTodoControllerCreate(t *testing.T) {
+	t.Run("when title is blank", func(t *testing.T) {
+		t.Cleanup(func() {
+			db.Reset()
+		})
+
+		t.Run("responds correct error message", func(t *testing.T) {
+			reqBody := CreateTodoParams{Title: ""}
+			encodedReqBody, _ := json.Marshal(reqBody)
+			req := httptest.NewRequest(http.MethodPost, "http://localhost:3000/todos", bytes.NewBuffer(encodedReqBody))
+			got := httptest.NewRecorder()
+
+			HandleTodos(got, req)
+
+			data := new(serializers.ErrorResponse)
+			json.Unmarshal(got.Body.Bytes(), data)
+
+			if data.Message != "件名は必須です。" {
+				t.Errorf("expected %+v, but got %+v", "件名は必須です。", data.Message)
+			}
+		})
+	})
+
+	t.Run("when parameters are valid", func(t *testing.T) {
+		t.Cleanup(func() {
+			db.Reset()
+		})
+
+		t.Run("creates new todo", func(t *testing.T) {
+			prevCount, _ := models.Todos().Count(context.Background(), db.Conn)
+
+			reqBody := CreateTodoParams{Title: "New Todo Title"}
+			encodedReqBody, _ := json.Marshal(reqBody)
+			req := httptest.NewRequest(http.MethodPost, "http://localhost:3000/todos", bytes.NewBuffer(encodedReqBody))
+			got := httptest.NewRecorder()
+
+			HandleTodos(got, req)
+
+			currentCount, _ := models.Todos().Count(context.Background(), db.Conn)
+
+			if prevCount+1 != currentCount {
+				t.Errorf("expected %+v, but got %+v", prevCount+1, currentCount)
+			}
+
+			data := new(models.Todo)
+			json.Unmarshal(got.Body.Bytes(), data)
+
+			if data.Title != reqBody.Title {
+				t.Errorf("expected %+v, but got %+v", reqBody.Title, data.Title)
+			}
+		})
+	})
+}
+
 func TestTodoControllerIndex(t *testing.T) {
 	t.Run("when todo does not exist", func(t *testing.T) {
 		t.Run("responds empty array", func(t *testing.T) {
@@ -83,60 +137,6 @@ func TestTodoControllerIndex(t *testing.T) {
 
 			if data1.Title != "Todo 1" || data2.Title != "Todo 2" {
 				t.Errorf("expected todo has correct title, but got %+v, %+v", data1, data2)
-			}
-		})
-	})
-}
-
-func TestTodoControllerCreate(t *testing.T) {
-	t.Run("when title is blank", func(t *testing.T) {
-		t.Cleanup(func() {
-			db.Reset()
-		})
-
-		t.Run("responds correct error message", func(t *testing.T) {
-			reqBody := CreateTodoParams{Title: ""}
-			encodedReqBody, _ := json.Marshal(reqBody)
-			req := httptest.NewRequest(http.MethodPost, "http://localhost:3000/todos", bytes.NewBuffer(encodedReqBody))
-			got := httptest.NewRecorder()
-
-			HandleTodos(got, req)
-
-			data := new(serializers.ErrorResponse)
-			json.Unmarshal(got.Body.Bytes(), data)
-
-			if data.Message != "件名は必須です。" {
-				t.Errorf("expected %+v, but got %+v", "件名は必須です。", data.Message)
-			}
-		})
-	})
-
-	t.Run("when parameters are valid", func(t *testing.T) {
-		t.Cleanup(func() {
-			db.Reset()
-		})
-
-		t.Run("creates new todo", func(t *testing.T) {
-			prevCount, _ := models.Todos().Count(context.Background(), db.Conn)
-
-			reqBody := CreateTodoParams{Title: "New Todo Title"}
-			encodedReqBody, _ := json.Marshal(reqBody)
-			req := httptest.NewRequest(http.MethodPost, "http://localhost:3000/todos", bytes.NewBuffer(encodedReqBody))
-			got := httptest.NewRecorder()
-
-			HandleTodos(got, req)
-
-			currentCount, _ := models.Todos().Count(context.Background(), db.Conn)
-
-			if prevCount+1 != currentCount {
-				t.Errorf("expected %+v, but got %+v", prevCount+1, currentCount)
-			}
-
-			data := new(models.Todo)
-			json.Unmarshal(got.Body.Bytes(), data)
-
-			if data.Title != reqBody.Title {
-				t.Errorf("expected %+v, but got %+v", reqBody.Title, data.Title)
 			}
 		})
 	})
