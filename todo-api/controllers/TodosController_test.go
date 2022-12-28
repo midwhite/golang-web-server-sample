@@ -19,7 +19,9 @@ import (
 
 func TestMain(m *testing.M) {
 	os.Setenv("DATABASE_URL", "postgres://postgres@todo-api-db:5432/todo_api_test?sslmode=disable")
-	db.Setup()
+	close := db.Setup()
+	defer close()
+
 	db.Reset()
 
 	status := m.Run()

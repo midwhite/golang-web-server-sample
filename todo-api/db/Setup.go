@@ -12,7 +12,7 @@ import (
 
 var Conn *sql.DB
 
-func Setup() {
+func Setup() func() {
 	conn, err := sql.Open("pgx", os.Getenv("DATABASE_URL"))
 
 	if err != nil {
@@ -21,6 +21,11 @@ func Setup() {
 	}
 
 	Conn = conn
+
+	return func() {
+		Conn.Close()
+		fmt.Println("database connection is closed.")
+	}
 }
 
 func readMigrationFiles(pattern string) []string {
@@ -65,9 +70,4 @@ func Rollback() {
 func Reset() {
 	Rollback()
 	Migrate()
-}
-
-func Close() {
-	Conn.Close()
-	fmt.Println("database connection is closed.")
 }

@@ -8,8 +8,8 @@ import (
 )
 
 func main() {
-	db.Setup()
-	defer db.Close()
+	close := db.Setup()
+	defer close()
 
 	fmt.Println("HTTP server is starting...")
 	router.StartServer()
