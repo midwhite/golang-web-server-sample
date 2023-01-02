@@ -16,5 +16,23 @@ services:
       DATABASE_URL: postgres://postgres@todo-api-db:5432/todo_api_development?sslmode=disable
     depends_on:
       - todo-api-db
+  marriage-quest-db:
+    image: postgres:15.1-alpine
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - marriage-quest-db-data:/var/lib/postgresql/data
+  marriage-quest:
+    build: ./marriage-quest
+    volumes:
+      - ./marriage-quest:/app
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgres://postgres@marriage-quest-db:5432/marriage_quest_development?sslmode=disable
+    depends_on:
+      - marriage-quest-db
+
 volumes:
   todo-api-db-data:
+  marriage-quest-db-data:
