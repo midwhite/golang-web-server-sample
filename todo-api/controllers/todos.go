@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -88,7 +87,7 @@ func createTodo(w http.ResponseWriter, req *http.Request) {
 		w.Write(body)
 	} else {
 		todo := models.Todo{Title: params.Title, CreatedAt: time.Now()}
-		todo.Insert(context.Background(), db.Conn, boil.Infer())
+		todo.Insert(req.Context(), db.Conn, boil.Infer())
 		body, _ := json.Marshal(todo)
 
 		w.Header().Set("Content-Type", "application/json")
@@ -101,8 +100,8 @@ type GetTodoListResponse struct {
 	Todos []*models.Todo `json:"todos"`
 }
 
-func getTodoList(w http.ResponseWriter, _ *http.Request) {
-	todos, _ := models.Todos(qm.OrderBy("created_at")).All(context.Background(), db.Conn)
+func getTodoList(w http.ResponseWriter, req *http.Request) {
+	todos, _ := models.Todos(qm.OrderBy("created_at")).All(req.Context(), db.Conn)
 	if todos == nil {
 		todos = make([]*models.Todo, 0)
 	}
@@ -113,8 +112,8 @@ func getTodoList(w http.ResponseWriter, _ *http.Request) {
 	w.Write(body)
 }
 
-func getTodoDetail(w http.ResponseWriter, _ *http.Request, todoId string) {
-	todo, err := models.FindTodo(context.Background(), db.Conn, todoId, "id", "title")
+func getTodoDetail(w http.ResponseWriter, req *http.Request, todoId string) {
+	todo, err := models.FindTodo(req.Context(), db.Conn, todoId, "id", "title")
 
 	if err != nil {
 		data := serializers.ErrorResponse{Message: "todo is not found."}
@@ -135,7 +134,8 @@ type UpdateTodoParams struct {
 }
 
 func updateTodo(w http.ResponseWriter, req *http.Request, todoId string) {
-	todo, err := models.FindTodo(context.Background(), db.Conn, todoId, "id", "title", "created_at")
+	ctx := req.Context()
+	todo, err := models.FindTodo(ctx, db.Conn, todoId, "id", "title", "created_at")
 
 	if err != nil {
 		data := serializers.ErrorResponse{Message: "todo is not found."}
@@ -166,7 +166,7 @@ func updateTodo(w http.ResponseWriter, req *http.Request, todoId string) {
 			w.Write(body)
 		} else {
 			todo.Title = params.Title
-			todo.Update(context.Background(), db.Conn, boil.Infer())
+			todo.Update(ctx, db.Conn, boil.Infer())
 
 			body, _ := json.Marshal(todo)
 			w.Write(body)
@@ -178,8 +178,9 @@ type DeleteTodoResponse struct {
 	Success bool `json:"success"`
 }
 
-func deleteTodo(w http.ResponseWriter, _ *http.Request, todoId string) {
-	todo, err := models.FindTodo(context.Background(), db.Conn, todoId, "id")
+func deleteTodo(w http.ResponseWriter, req *http.Request, todoId string) {
+	ctx := req.Context()
+	todo, err := models.FindTodo(ctx, db.Conn, todoId, "id")
 
 	if err != nil {
 		data := serializers.ErrorResponse{Message: "todo is not found."}
@@ -188,7 +189,7 @@ func deleteTodo(w http.ResponseWriter, _ *http.Request, todoId string) {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write(body)
 	} else {
-		todo.Delete(context.Background(), db.Conn)
+		todo.Delete(ctx, db.Conn)
 
 		data := DeleteTodoResponse{Success: true}
 		body, _ := json.Marshal(data)
