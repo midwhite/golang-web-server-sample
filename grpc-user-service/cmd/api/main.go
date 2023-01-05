@@ -1,7 +1,10 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+)
 
 func main() {
+	grpc
 	fmt.Println("API server is started.")
 }
