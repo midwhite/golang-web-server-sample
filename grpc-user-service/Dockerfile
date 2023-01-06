@@ -1,6 +1,6 @@
 FROM golang:1.19.3
 
-WORKDIR /app
+WORKDIR /app/grpc-user-service
 
 RUN apt-get update && apt-get install -y postgresql-client protobuf-compiler
 
