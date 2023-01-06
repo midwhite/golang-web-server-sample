@@ -1,5 +1,9 @@
 version: "3"
 services:
+  proto:
+    build: ./proto
+    volumes:
+      - .:/app
   todo-api-db:
     image: postgres:13.3
     environment:
@@ -9,7 +13,7 @@ services:
   todo-api:
     build: ./todo-api
     volumes:
-      - ./todo-api:/app
+      - .:/app
     ports:
       - "3000:3000"
     environment:
@@ -25,7 +29,7 @@ services:
   grpc-user-service:
     build: ./grpc-user-service
     volumes:
-      - ./grpc-user-service:/app
+      - .:/app
     environment:
       DATABASE_URL: postgres://postgres@grpc-user-service-db:5432/marriage_quest_development?sslmode=disable
     depends_on:
