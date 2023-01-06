@@ -5,7 +5,7 @@ test:
 build:
 	go build -o cmd/api/run cmd/api/main.go
 proto:
-	protoc -I . ./user-service.proto --go_out=./proto/
+	protoc -I . ./user-service.proto --go_out=plugins=grpc:./proto/
 generate-models:
 	sqlboiler psql --wipe
 init-db:
