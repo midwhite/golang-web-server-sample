@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package userservice;
+
+option go_package = "./";
+
+service UserService {
+  rpc GetUserDetail(GetUserDetailParams) returns (UserDetail) {}
+}
+
+message GetUserDetailParams { string id = 1; }
+
+message UserDetail {
+  string id = 1;
+  string name = 2;
+  int64 age = 3;
+}
