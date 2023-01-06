@@ -4,6 +4,14 @@ services:
     build: ./proto
     volumes:
       - .:/app
+  graphql-gateway:
+    build: ./graphql-gateway
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - grpc-user-service
   todo-api-db:
     image: postgres:13.3
     environment:
@@ -20,20 +28,21 @@ services:
       DATABASE_URL: postgres://postgres@todo-api-db:5432/todo_api_development?sslmode=disable
     depends_on:
       - todo-api-db
+      - grpc-user-service
+  grpc-user-service:
+    build: ./grpc-user-service
+    volumes:
+      - .:/app
+    environment:
+      DATABASE_URL: postgres://postgres@grpc-user-service-db:5432/grpc_user_service_development?sslmode=disable
+    depends_on:
+      - grpc-user-service-db
   grpc-user-service-db:
     image: postgres:15.1-alpine
     environment:
       POSTGRES_HOST_AUTH_METHOD: trust
     volumes:
       - grpc-user-service-db-data:/var/lib/postgresql/data
-  grpc-user-service:
-    build: ./grpc-user-service
-    volumes:
-      - .:/app
-    environment:
-      DATABASE_URL: postgres://postgres@grpc-user-service-db:5432/marriage_quest_development?sslmode=disable
-    depends_on:
-      - grpc-user-service-db
 
 volumes:
   todo-api-db-data:
