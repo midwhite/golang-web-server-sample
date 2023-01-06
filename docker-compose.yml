@@ -9,7 +9,8 @@ services:
     volumes:
       - .:/app
     ports:
-      - "8000:8000"
+      - "8080:8080"
+    command: air
     depends_on:
       - grpc-user-service
   todo-api-db:
