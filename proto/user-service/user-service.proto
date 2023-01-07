@@ -1,17 +1,32 @@
 syntax = "proto3";
 
-option go_package = "github.com/midwhite/golang-web-serber-sample/grpc-user-service/pb";
+option go_package = "github.com/midwhite/golang-web-server-sample/grpc-user-service/pb";
 
 package pb;
 
 service UserService {
-  rpc GetUserDetail(GetUserDetailParams) returns (UserDetail) {}
+  rpc GetUsers(GetUsersParams) returns (UserList) {}
+  rpc CreateUser(CreateUserParams) returns (User) {}
+  rpc UpdateUser(UpdateUserParams) returns (User) {}
 }
 
-message GetUserDetailParams { string id = 1; }
+message GetUsersParams {}
 
-message UserDetail {
+message CreateUserParams {
+  string name = 1;
+  int64 age = 2;
+}
+
+message UpdateUserParams {
   string id = 1;
   string name = 2;
   int64 age = 3;
 }
+
+message User {
+  string id = 1;
+  string name = 2;
+  int64 age = 3;
+}
+
+message UserList { repeated User users = 1; }
