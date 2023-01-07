@@ -8,24 +8,50 @@ import (
 	"context"
 
 	"github.com/midwhite/golang-web-server-sample/graphql-gateway/graph/model"
+	"github.com/midwhite/golang-web-server-sample/graphql-gateway/pb"
+	"github.com/midwhite/golang-web-server-sample/graphql-gateway/userservice"
 )
 
 // CreateUser is the resolver for the createUser field.
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) (*model.User, error) {
-	return &model.User{ID: "uuid", Name: input.Name, Age: input.Age}, nil
+	params := pb.CreateUserParams{Name: input.Name, Age: int64(input.Age)}
+	res, err := userservice.Client.CreateUser(ctx, &params)
+
+	if err != nil {
+		return nil, err
+	}
+
+	user := model.User{ID: res.Id, Name: res.Name, Age: input.Age}
+
+	return &user, nil
 }
 
 // UpdateUser is the resolver for the updateUser field.
 func (r *mutationResolver) UpdateUser(ctx context.Context, input model.UserAttributes) (*model.User, error) {
-	return &model.User{ID: input.ID, Name: input.Name, Age: input.Age}, nil
+	params := pb.UpdateUserParams{Id: input.ID, Name: input.Name, Age: int64(input.Age)}
+	res, err := userservice.Client.UpdateUser(ctx, &params)
+
+	if err != nil {
+		return nil, err
+	}
+
+	user := model.User{ID: res.Id, Name: res.Name, Age: input.Age}
+
+	return &user, nil
 }
 
 // Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
-	users := []*model.User{
-		{ID: "1", Name: "徳川家康", Age: 20},
-		{ID: "2", Name: "豊臣秀吉", Age: 25},
-		{ID: "3", Name: "織田信長", Age: 30},
+	res, err := userservice.Client.GetUsers(context.Background(), &pb.GetUsersParams{})
+
+	if err != nil {
+		return nil, err
+	}
+
+	users := make([]*model.User, len(res.Users))
+
+	for i, user := range res.Users {
+		users[i] = &model.User{ID: user.Id, Name: user.Name, Age: int(user.Age)}
 	}
 
 	return users, nil

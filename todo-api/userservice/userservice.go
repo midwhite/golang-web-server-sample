@@ -11,7 +11,7 @@ import (
 	"github.com/midwhite/golang-web-server-sample/todo-api/pb"
 )
 
-func GetUserDetail(id string) *pb.UserDetail {
+func GetUsers(id string) *pb.UserList {
 	flag.Parse()
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -23,7 +23,7 @@ func GetUserDetail(id string) *pb.UserDetail {
 	defer conn.Close()
 	client := pb.NewUserServiceClient(conn)
 
-	user, err := client.GetUserDetail(context.Background(), &pb.GetUserDetailParams{Id: id})
+	user, err := client.GetUsers(context.Background(), &pb.GetUsersParams{})
 
 	if err != nil {
 		log.Fatalf("client.GetUserDetail failed: %v", err)

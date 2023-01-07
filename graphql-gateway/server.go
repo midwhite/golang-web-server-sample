@@ -8,11 +8,18 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/midwhite/golang-web-server-sample/graphql-gateway/graph"
+	"github.com/midwhite/golang-web-server-sample/graphql-gateway/userservice"
 )
 
 const defaultPort = "8080"
 
 func main() {
+	closer, err := userservice.Setup()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer closer()
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = defaultPort
